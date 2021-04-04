@@ -1,0 +1,119 @@
+#!/usr/bin/python3
+import os
+import sys
+import re
+import logging, sys
+from pathlib import Path
+
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+def _execute(command):
+    if not command in commands:
+        err = '"' + command + '" command not found, please use one of the following:'
+        for c in commands:
+            err += "\n" + c
+        sys.exit(err)
+
+    if command == 'init':
+        cwd = os.getcwd()
+        os.makedirs(os.path.join(cwd, 'aliases'), exist_ok = True)
+        os.makedirs(os.path.join(cwd, 'functions'), exist_ok = True)
+        os.makedirs(os.path.join(cwd, 'out'), exist_ok = True)
+
+    if command == 'compile':
+        logging.debug("Compiling...")
+        _do_compile()
+
+def _do_compile():
+    cwd = os.getcwd()
+    aliases_dir = os.path.join(cwd, 'aliases')
+    functions_dir = os.path.join(cwd, 'functions')
+
+    aliases = _find_files_recursively(aliases_dir, '.alias')
+    functions = _find_files_recursively(functions_dir, '.func')
+
+    for alias in aliases:
+        logging.debug(f'>> compiling alias {alias}')
+        alias_output = _do_compile_alias(alias, functions)
+        logging.debug(f'>> alias output: {alias_output}')
+        logging.debug('>> output over')
+
+        _write_compiled_alias(str(alias), alias_output)
+
+def _write_compiled_alias(alias_path, compiled_output):
+    cwd = os.getcwd()
+    aliases_folder = os.path.join(cwd, 'aliases')
+    output_folder = os.path.join(cwd, 'out')
+    output_path = alias_path.replace(aliases_folder, output_folder)
+    logging.debug(f'Writing compiled alias to {output_path}')
+    os.makedirs(os.path.dirname(output_path), exist_ok = True)
+    f = open(output_path, 'w')
+    f.write(compiled_output)
+    f.close()
+
+def _do_compile_alias(alias_path, function_files):
+    new_content = ''
+    current_index = 0
+    with open(alias_path) as f:
+        alias_content = f.read()
+        f_re = '\n(([ \t]*)*)([a-zA-Z_][a-zA-Z_\d]*)?([ \t]*=[ \t]*)?#![ \t]*devrae_f[ \t]*([a-zA-Z_][a-zA-Z_\d]*)[ \t]*(\(.*)!#'
+
+        matches = re.finditer(f_re, alias_content)
+        for match in matches:
+            start_index = match.start()
+            end_index = match.end()
+            indent = match.group(1) if match.group(1) else ''
+            return_var = match.group(3)
+            function_name = match.group(5)
+            params_str = match.group(6).strip()
+            params_str = params_str[1:len(params_str) - 1].strip()
+
+            logging.debug(f'>> injecting function {function_name} in alias {alias_path}')
+
+            function_content = _read_function_content(function_name)
+
+            new_content += alias_content[current_index:start_index]
+            new_content += "\n\n" + indent + "##### devrae function insert #####\n"
+            params = params_str.split('#P')[1:]
+            for p_index in range(len(params)):
+                param = params[p_index].strip()
+                if len(param) != 0:
+                    new_content += f'{indent}__p{p_index}__ = {param}' + "\n"
+
+            for line in function_content:
+                new_content += indent + line
+
+            if return_var != None and len(return_var.strip()) > 0:
+                new_content += f'{indent}{return_var} = __result__'
+
+            new_content += "\n" + indent + "##### devrae function end #####\n\n"
+
+            current_index = end_index
+
+        new_content += alias_content[current_index:len(alias_content) - 1]
+
+    return new_content
+
+def _read_function_content(function_name):
+    cwd = os.getcwd()
+    function_dir = os.path.join(cwd, 'functions')
+    function_file = os.path.join(function_dir, function_name + ".func")
+    content = ''
+    with open(function_file) as f:
+        content = f.readlines()
+    return content
+
+def _find_files_recursively(root, extension):
+    files = []
+    for path in Path(root).rglob(f'*{extension}'):
+        files.append(path)
+    return files
+
+commands = [
+    'init',
+    'compile',
+    'deploy'
+]
+
+command = sys.argv[1]
+_execute(command)

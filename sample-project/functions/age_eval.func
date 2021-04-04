@@ -1,0 +1,7 @@
+_name = __p0__
+_age = __p1__
+
+if _age >= 18:
+  __result__ = "You character is older than 18 years old!"
+else:
+  __result__ = "Your character is still a youngling!"

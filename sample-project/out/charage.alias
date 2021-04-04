@@ -1,0 +1,22 @@
+!alias charage embed
+<drac2>
+char_age = int(%1%)
+char_name = character.name()
+
+##### devrae function insert #####
+__p0__ = char_name
+__p1__ = char_age
+_name = __p0__
+_age = __p1__
+
+if _age >= 18:
+  __result__ = "You character is older than 18 years old!"
+else:
+  __result__ = "Your character is still a youngling!"
+desc = __result__
+##### devrae function end #####
+
+
+</drac2>
+-t "What is your character age?"
+-desc dec
