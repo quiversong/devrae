@@ -33,6 +33,7 @@ def _do_init():
     os.makedirs(os.path.join(cwd, 'aliases'), exist_ok = True)
     os.makedirs(os.path.join(cwd, 'functions'), exist_ok = True)
     os.makedirs(os.path.join(cwd, 'out'), exist_ok = True)
+    os.makedirs(os.path.join(cwd, 'gvars'), exist_ok = True)
     os.makedirs(os.path.join(cwd, 'config'), exist_ok = True)
     f = open(os.path.join(cwd, 'config', 'avrae-ids.json'), 'w')
     template = ('{\n'
@@ -151,8 +152,32 @@ def _do_deploy():
     out_folder = os.path.join(cwd, 'out')
     all_aliases = _find_files_recursively(out_folder, '.alias')
 
+    gvars_folder = os.path.join(cwd, 'gvars')
+    all_gvars = _find_files_recursively(gvars_folder, '.gvar')
+
     avrae_token = os.environ.get("AVRAE_TOKEN")
     logging.debug(f'AVRAE TOKEN: {avrae_token}')
+
+    for gvar in all_gvars:
+        with open(gvar, 'r') as f:
+            code = f.read()
+            data_post = {
+                "value": code
+            }
+
+            gvar_name = os.path.basename(f.name).split('.')[0]
+            gvar_id = config["gvars"][gvar_name]
+
+            # Make Requests
+            auth = {'Authorization': avrae_token}
+            request = f'https://api.avrae.io/customizations/gvars/{gvar_id}'
+            print('POST Request Sent to ' + request)
+            # POST New Alias Code
+            post_result = requests.post(url=request,
+                                        json=data_post,
+                                        headers=auth
+                                        )
+            print(f'Result for ID {gvar_id}: {post_result.text}')
 
     for alias in all_aliases:
         with open(alias, 'r') as f:
