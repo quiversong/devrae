@@ -15,6 +15,10 @@ Prerequisite
 How to Install
 --------------
 Clone the repository and add the devrae folder to the PATH.
+You will need to have Python's `requests` module installed, to do that, run:
+```python -m pip install requests```
+or:
+```python3 -m pip install requests```
 
 Creating a development environment
 -----------------------------------
