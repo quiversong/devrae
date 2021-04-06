@@ -14,7 +14,7 @@ Prerequisite
 
 How to Install
 --------------
-Clone the repository and add devrae to PATH.
+Clone the repository and add the devrae folder to the PATH.
 
 Creating a development environment
 -----------------------------------
@@ -80,6 +80,6 @@ Devrae functions are a very limited and simple method to introduce some level of
 Acknowledgments
 ---------------
 
-Thanks to [DTurtle](https://github.com/1drturtle) for the code to deploy gvars and aliases.
-They developed an amazing tool that automates the deploy via GitHub workflows.
-Check it out on [their GitHub page](https://github.com/1drturtle)
+Thanks to [DTurtle](https://github.com/1drturtle) for the code to deploy gvars and aliases, and the code to retrieve collection object IDs.
+DTurtle develops amazing tools that automates Avrae deploys via GitHub workflows, as well as great Avrae Aliases.
+Check it out on [their GitHub page!](https://github.com/1drturtle)

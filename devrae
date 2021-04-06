@@ -10,23 +10,35 @@ from pathlib import Path
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
-def _execute(command):
-    if not command in commands:
-        err = '"' + command + '" command not found, please use one of the following:'
-        for c in commands:
-            err += "\n" + c
-        sys.exit(err)
+commands = [
+    'init',
+    'compile',
+    'deploy',
+    'get-ids'
+]
 
+if len(sys.argv) < 2 or not sys.argv[1] in commands:
+    raise Exception('Usage: devrae <init|compile|deploy|get-ids>')
+
+
+
+def main(command):
     if command == 'init':
         _do_init()
 
     if command == 'compile':
-        logging.info(">> Compiling...")
+        logging.info('>> Compiling...')
         _do_compile()
 
     if command == 'deploy':
-        logging.info(">> Deploying...")
+        logging.info('>> Deploying...')
         _do_deploy()
+
+    if command == 'get-ids':
+        if len(sys.argv) < 3:
+            raise Exception('Usage: devrae get-ids <collection id>')
+        logging.info('>> Retrieving IDs from collection...')
+        _do_get_ids(sys.argv[2])
 
 def _do_init():
     cwd = os.getcwd()
@@ -229,11 +241,30 @@ def _do_deploy():
                       f'POST Result: {post_result["success"]} '
                       f'PUT Result: {put_result["success"]}')
 
-commands = [
-    'init',
-    'compile',
-    'deploy'
-]
+def _print_subaliases(alias, parent):
+    parent = parent
+    for subalias in alias['subcommands']:
+        print(f'Sub-Alias !{" ".join(parent)} {subalias["name"]} found, ID: {subalias["_id"]}')
+        this_parent = parent + [subalias['name']]
+        _print_subaliases(subalias, this_parent)
 
-command = sys.argv[1]
-_execute(command)
+def _do_get_ids(collection_id):
+    logging.info('Finding Aliases and Snippets.')
+
+    collection = requests.get(url=f'https://api.avrae.io/workshop/collection/{collection_id}/full')
+    collection = collection.json()
+
+    if collection['success']:
+        collection = collection['data']
+        for alias in collection['aliases']:
+            logging.info(f"Alias !{alias['name']} found, ID: {alias['_id']}")
+            subaliases = alias['subcommands']
+            _print_subaliases(alias, [alias["name"]])
+        for snippet in collection['snippets']:
+            logging.info(f"Snippet !{snippet['name']} found, ID: {snippet['_id']}")
+
+    else:
+        return logging.info('Error in Collection: ', collection)
+
+if __name__ == '__main__':
+    main(sys.argv[1])
