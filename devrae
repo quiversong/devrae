@@ -8,7 +8,7 @@ import json
 import requests
 from pathlib import Path
 
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 def _execute(command):
     if not command in commands:
@@ -21,20 +21,24 @@ def _execute(command):
         _do_init()
 
     if command == 'compile':
-        logging.debug("Compiling...")
+        logging.info(">> Compiling...")
         _do_compile()
 
     if command == 'deploy':
-        logging.debug("Deploying...")
+        logging.info(">> Deploying...")
         _do_deploy()
 
 def _do_init():
     cwd = os.getcwd()
+    logging.info(">> Creating work folders and sample configuration file...")
     os.makedirs(os.path.join(cwd, 'aliases'), exist_ok = True)
+    logging.info(">> aliases OK")
     os.makedirs(os.path.join(cwd, 'functions'), exist_ok = True)
-    os.makedirs(os.path.join(cwd, 'out'), exist_ok = True)
+    logging.info(">> functions OK")
     os.makedirs(os.path.join(cwd, 'gvars'), exist_ok = True)
+    logging.info(">> gvars OK")
     os.makedirs(os.path.join(cwd, 'config'), exist_ok = True)
+    logging.info(">> config OK")
     f = open(os.path.join(cwd, 'config', 'avrae-ids.json'), 'w')
     template = ('{\n'
             '    "aliases": {\n'
@@ -50,6 +54,9 @@ def _do_init():
 
 def _do_compile():
     cwd = os.getcwd()
+
+    os.makedirs(os.path.join(cwd, 'out'), exist_ok = True)
+
     aliases_dir = os.path.join(cwd, 'aliases')
     functions_dir = os.path.join(cwd, 'functions')
 
@@ -57,12 +64,14 @@ def _do_compile():
     functions = _find_files_recursively(functions_dir, '.func')
 
     for alias in aliases:
-        logging.debug(f'>> compiling alias {alias}')
+        logging.info(f'>> Compiling alias "{alias}"')
         alias_output = _do_compile_alias(alias, functions)
         logging.debug(f'>> alias output: {alias_output}')
-        logging.debug('>> output over')
+        logging.info(f'>> Finished compiling alias "{alias}"')
 
         _write_compiled_alias(str(alias), alias_output)
+
+    logging.info(">> Compiled files added to the 'out' folder.")
 
 def _write_compiled_alias(alias_path, compiled_output):
     cwd = os.getcwd()
