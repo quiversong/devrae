@@ -197,31 +197,37 @@ def _do_deploy():
             }
 
             alias_name = os.path.basename(f.name).split('.')[0]
+            if not alias_name in config["aliases"]:
+                logging.info(f"Configuration for alias {alias_name} not found. Skipping...")
+            else:
+                # Make Requests
+                auth = {'Authorization': avrae_token}
+                root_request_url = 'https://api.avrae.io/workshop/alias/{}/'
+                post_url = (root_request_url + 'code').format(config["aliases"][alias_name])
+                print('POST Request Sent to ' + post_url)
+                # POST New Alias Code
+                post_result = requests.post(url=post_url,
+                                            json=data_post,
+                                            headers=auth
+                                            ).json()
 
-            # Make Requests
-            auth = {'Authorization': avrae_token}
-            root_request_url = 'https://api.avrae.io/workshop/alias/{}/'
-            post_url = (root_request_url + 'code').format(config["aliases"][alias_name])
-            print('POST Request Sent to ' + post_url)
-            # POST New Alias Code
-            post_result = requests.post(url=post_url,
-                                        json=data_post,
-                                        headers=auth
-                                        ).json()
+                if not post_result["success"]:
+                    logging.info(f'There was an error communicatin with Avrae: {post_result["error"]}')
+                    sys.exit(1)
 
-            # PUT new alias code as active
-            data_put = {
-                'version': post_result['data']['version']
-            }
-            put_url = (root_request_url + 'active-code').format(config["aliases"][alias_name])
-            print('PUT Request Sent to '+put_url)
-            put_result = requests.put(url=put_url,
-                                      json=data_put,
-                                      headers=auth
-                                      ).json()
-            print(f'Result for {alias_name} (Version #{data_put["version"]}) - '
-                  f'POST Result: {post_result["success"]} '
-                  f'PUT Result: {put_result["success"]}')
+                # PUT new alias code as active
+                data_put = {
+                    'version': post_result['data']['version']
+                }
+                put_url = (root_request_url + 'active-code').format(config["aliases"][alias_name])
+                print('PUT Request Sent to '+put_url)
+                put_result = requests.put(url=put_url,
+                                          json=data_put,
+                                          headers=auth
+                                          ).json()
+                print(f'Result for {alias_name} (Version #{data_put["version"]}) - '
+                      f'POST Result: {post_result["success"]} '
+                      f'PUT Result: {put_result["success"]}')
 
 commands = [
     'init',
