@@ -1,8 +1,11 @@
+#!/usr/local/bin/python3
 #!/usr/bin/python3
 import os
 import sys
 import re
 import logging, sys
+import json
+import requests
 from pathlib import Path
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -15,18 +18,34 @@ def _execute(command):
         sys.exit(err)
 
     if command == 'init':
-        cwd = os.getcwd()
-        os.makedirs(os.path.join(cwd, 'aliases'), exist_ok = True)
-        os.makedirs(os.path.join(cwd, 'functions'), exist_ok = True)
-        os.makedirs(os.path.join(cwd, 'out'), exist_ok = True)
-        os.makedirs(os.path.join(cwd, 'config'), exist_ok = True)
-        f = open(os.path.join(cwd, 'config', 'alias-ids.json'), 'w')
-        f.write('{\n    "aliasName": "aliasId"\n}')
-        f.close()
+        _do_init()
 
     if command == 'compile':
         logging.debug("Compiling...")
         _do_compile()
+
+    if command == 'deploy':
+        logging.debug("Deploying...")
+        _do_deploy()
+
+def _do_init():
+    cwd = os.getcwd()
+    os.makedirs(os.path.join(cwd, 'aliases'), exist_ok = True)
+    os.makedirs(os.path.join(cwd, 'functions'), exist_ok = True)
+    os.makedirs(os.path.join(cwd, 'out'), exist_ok = True)
+    os.makedirs(os.path.join(cwd, 'config'), exist_ok = True)
+    f = open(os.path.join(cwd, 'config', 'avrae-ids.json'), 'w')
+    template = ('{\n'
+            '    "aliases": {\n'
+            '        "aliasName": "aliasId"\n'
+            '    },\n'
+            '    "gvars": {\n'
+            '        "gvarName": "gvarId"\n'
+            '    }\n'
+            '}'
+            )
+    f.write(template)
+    f.close()
 
 def _do_compile():
     cwd = os.getcwd()
@@ -102,16 +121,72 @@ def _read_function_content(function_name):
     cwd = os.getcwd()
     function_dir = os.path.join(cwd, 'functions')
     function_file = os.path.join(function_dir, function_name + ".func")
+    return _read_file_as_string_list(function_file)
+
+def _read_file_as_string_list(file_path):
     content = ''
-    with open(function_file) as f:
+    with open(file_path) as f:
         content = f.readlines()
     return content
+
+def _read_file_as_single_string(file_path):
+    content = ''
+    with open(file_path) as f:
+        content = f.read()
+    return content
+
 
 def _find_files_recursively(root, extension):
     files = []
     for path in Path(root).rglob(f'*{extension}'):
         files.append(path)
     return files
+
+def _do_deploy():
+    cwd = os.getcwd()
+    config_file = os.path.join(cwd, 'config', 'avrae-ids.json')
+    config_txt = _read_file_as_single_string(config_file)
+    config = json.loads(config_txt)
+
+    out_folder = os.path.join(cwd, 'out')
+    all_aliases = _find_files_recursively(out_folder, '.alias')
+
+    avrae_token = os.environ.get("AVRAE_TOKEN")
+    logging.debug(f'AVRAE TOKEN: {avrae_token}')
+
+    for alias in all_aliases:
+        with open(alias, 'r') as f:
+            code = f.read()
+            data_post = {
+                "content": code
+            }
+
+            alias_name = os.path.basename(f.name).split('.')[0]
+
+            # Make Requests
+            auth = {'Authorization': avrae_token}
+            root_request_url = 'https://api.avrae.io/workshop/alias/{}/'
+            post_url = (root_request_url + 'code').format(config["aliases"][alias_name])
+            print('POST Request Sent to ' + post_url)
+            # POST New Alias Code
+            post_result = requests.post(url=post_url,
+                                        json=data_post,
+                                        headers=auth
+                                        ).json()
+
+            # PUT new alias code as active
+            data_put = {
+                'version': post_result['data']['version']
+            }
+            put_url = (root_request_url + 'active-code').format(config["aliases"][alias_name])
+            print('PUT Request Sent to '+put_url)
+            put_result = requests.put(url=put_url,
+                                      json=data_put,
+                                      headers=auth
+                                      ).json()
+            print(f'Result for {alias_name} (Version #{data_put["version"]}) - '
+                  f'POST Result: {post_result["success"]} '
+                  f'PUT Result: {put_result["success"]}')
 
 commands = [
     'init',
