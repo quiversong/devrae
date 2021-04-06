@@ -19,6 +19,10 @@ def _execute(command):
         os.makedirs(os.path.join(cwd, 'aliases'), exist_ok = True)
         os.makedirs(os.path.join(cwd, 'functions'), exist_ok = True)
         os.makedirs(os.path.join(cwd, 'out'), exist_ok = True)
+        os.makedirs(os.path.join(cwd, 'config'), exist_ok = True)
+        f = open(os.path.join(cwd, 'config', 'alias-ids.json'), 'w')
+        f.write('{\n    "aliasName": "aliasId"\n}')
+        f.close()
 
     if command == 'compile':
         logging.debug("Compiling...")
