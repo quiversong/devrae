@@ -80,6 +80,6 @@ Devrae functions are a very limited and simple method to introduce some level of
 Acknowledgments
 ---------------
 
-Thanks to [Turtle](https://github.com/1drturtle) for the code to deploy gvars and aliases.
+Thanks to [DTurtle](https://github.com/1drturtle) for the code to deploy gvars and aliases.
 They developed an amazing tool that automates the deploy via GitHub workflows.
 Check it out on [their GitHub page](https://github.com/1drturtle)
