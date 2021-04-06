@@ -76,3 +76,10 @@ Devrae functions are a very limited and simple method to introduce some level of
 - Be mindful of the names of the variables, as the scope of the functions share the same scope as the alias code they are injected in.
 - Because of that, it is advisable that you use hidden variable names (as per Python's convention) in your function-scoped variables, as in the example above.
 - Do not use the `return` keyword inside your functions.
+
+Acknowledgments
+---------------
+
+Thanks to [Turtle](https://github.com/1drturtle) for the code to deploy gvars and aliases.
+They developed an amazing tool that automates the deploy via GitHub workflows.
+Check it out on [their GitHub page](https://github.com/1drturtle)

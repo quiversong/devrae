@@ -158,6 +158,7 @@ def _do_deploy():
     avrae_token = os.environ.get("AVRAE_TOKEN")
     logging.debug(f'AVRAE TOKEN: {avrae_token}')
 
+    # deployment code credits to Turtle https://github.com/1drturtle
     for gvar in all_gvars:
         with open(gvar, 'r') as f:
             code = f.read()
