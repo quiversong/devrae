@@ -1,10 +1,10 @@
 Devrae: Avrae Development Utilities
 ===================================
 
-This utility supports in:
+This utility supports:
 - Creating the development environment
 - Support *very simplified* functions with macros
-- Deploy of aliases to Avrae Workshop
+- Deploy of aliases and gvars to Avrae Workshop
 
 Prerequisite
 -----------
