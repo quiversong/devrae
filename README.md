@@ -20,35 +20,35 @@ You will need to have Python's `requests` module installed, to do that, run:
 or:
 ```python3 -m pip install requests```
 
-Using Davrae
+Using Devrae
 -------------
 
-Davrae supports these commands:
+Devrae supports these commands:
 
-`davrae init`: use this in the root folder of your projects to create Davrae's folder structure.
-Devrae expects a certain folder structure to be in place for it work properly:
-*aliases:* contains the aliases that will be deployed to your Avrae account.
-*config:* contains the `avrae-ids.json` file that lists the aliases and gvars, and their IDs that are necessary for deployment to Avrae.
-*functions:* contains reusable functions that can be used in your Avrae aliases. The functions are compiled into your aliases, and the compiled version is deployed to Avrae.
-*gvars:* contains gvars that are deployed to Avrae automatically through Davrae.
-*out:* this is folder where Devrae will write the compiled aliases.
+`devrae init`: use this in the root folder of your projects to create Devrae's folder structure.\
+Devrae expects a certain folder structure to be in place for it work properly:\
+**aliases:** contains the aliases that will be deployed to your Avrae account.\
+**config:** contains the `avrae-ids.json` file that lists the aliases and gvars, and their IDs that are necessary for deployment to Avrae.\
+**functions:** contains reusable functions that can be used in your Avrae aliases. The functions are compiled into your aliases, and the compiled version is deployed to Avrae.\
+**gvars:** contains gvars that are deployed to Avrae automatically through Devrae.\
+**out:** this is folder where Devrae will write the compiled aliases.
 
-`davrae compile`: compiles all aliases in the *aliases* folder, by injecting your functions into them.
+`devrae compile`: compiles all aliases in the *aliases* folder, by injecting your functions into them.\
 The compiled aliases are placed in the `out` folder.
 
-`davrae deploy`: deploys the aliases and gvars configured in the `config/avrae-ids.json` file.
+`devrae deploy`: deploys the aliases and gvars configured in the `config/avrae-ids.json` file.
 
-`davrae get-ids <collection id>`: this command takes a collection id and prints the alias IDs for the objects in your collection.
+`devrae get-ids <collection id>`: this command takes a collection id and prints the alias IDs for the objects in your collection.
 These ids need to be placed in the `config/avrae-ids.json` for deployment.
 
 Using Devrae Functions
 ------------------------
 
-Unfortunately at this time Avrae does not support writing Pythong functions/methods in the customization of Aliases.
+Unfortunately at this time Avrae does not support writing Python functions/methods in the customization of Aliases.\
 With Devrae, you can write simple functions that are injected into your aliases via macros through a compilation process.
 
-Function parameters are accessed with `__p0__`, `__p1__`, `__p2__` and so on.
-The function's return value is stored in the variable `__result__`.
+Function parameters are accessed with `__p0__`, `__p1__`, `__p2__` and so on.\
+The function's return value is stored in the variable `__result__`.\
 The `return` keyword is not supported. Do not use it inside your functions or your code will not behave as expected.
 
 Example
@@ -93,6 +93,6 @@ Devrae functions are a very limited and simple method to introduce some level of
 Acknowledgments
 ---------------
 
-Thanks to [DTurtle](https://github.com/1drturtle) for the code to deploy gvars and aliases, and the code to retrieve collection object IDs.
-DTurtle develops amazing tools that automates Avrae deploys via GitHub workflows, as well as great Avrae Aliases.
+Thanks to [DTurtle](https://github.com/1drturtle) for the code to deploy gvars and aliases, and the code to retrieve collection object IDs.\
+DTurtle develops amazing tools that automates Avrae deploys via GitHub workflows, as well as great Avrae Aliases.\
 Check it out on [their GitHub page!](https://github.com/1drturtle)
