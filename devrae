@@ -127,14 +127,14 @@ def _do_compile_alias(alias_path, function_files):
 
     # Regex for Devrae function call. Format:
     # #! devrae_f <function name> (#P <parameter 1> #P <parameter 2, etc>) !#
-    f_re = '\n(([ \t]*)*)([a-zA-Z_][a-zA-Z_\d]*)?([ \t]*=[ \t]*)?#![ \t]*devrae_f[ \t]*([a-zA-Z_][a-zA-Z_\d]*)[ \t]*(\(.*)!#'
+    f_re = '\n(([ \t]*)*)#![ \t]*(([a-zA-Z_][a-zA-Z_\d]*)[ \t]*=[ \t]*)?devrae_f[ \t]*([a-zA-Z_][a-zA-Z_\d]*)[ \t]*(\(.*)!#'
 
     matches = re.finditer(f_re, alias_content)
     for match in matches:
         start_index = match.start()
         end_index = match.end()
         indent = match.group(1) if match.group(1) else ''
-        return_var = match.group(3)
+        return_var = match.group(4)
         function_name = match.group(5)
         params_str = match.group(6).strip()
         params_str = params_str[1:len(params_str) - 1].strip()
@@ -146,6 +146,11 @@ def _do_compile_alias(alias_path, function_files):
         new_content += alias_content[current_index:end_index]
         new_content += "\n" + indent + f'##### devrae function insert [{function_name}] #####' + "\n"
 
+        return_var = return_var.strip() if return_var != None and len(return_var.strip()) > 0 else None
+
+        if return_var != None:
+            new_content += f'{indent}{return_var} = None' + '\n'
+
         params = params_str.split('#P')[1:]
         for p_index in range(len(params)):
             param = params[p_index].strip()
@@ -155,7 +160,7 @@ def _do_compile_alias(alias_path, function_files):
         for line in function_content:
             new_content += indent + line
 
-        if return_var != None and len(return_var.strip()) > 0:
+        if return_var != None:
             new_content += f'{indent}{return_var} = __result__'
 
         new_content += "\n" + indent + f'##### devrae function end [{function_name}] #####'

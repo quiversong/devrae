@@ -69,7 +69,7 @@ else:
 <drac2>
 char_age = int(%1%)
 char_name = character.name()
-desc = #! devrae_f char_eval (#P char_name #P char_age) !#
+#! desc = devrae_f char_eval (#P char_name #P char_age) !#
 </drac2>
 -t "What is your character age?"
 -desc dec
