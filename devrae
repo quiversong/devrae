@@ -88,7 +88,12 @@ def _do_compile():
 def _write_compiled_alias(alias_path, compiled_output):
     cwd = os.getcwd()
     aliases_folder = os.path.join(cwd, 'aliases')
-    output_folder = os.path.join(cwd, 'out')
+
+    if len(sys.argv) > 2 and sys.argv[2].strip() == '-ow':
+        output_folder = aliases_folder
+    else:
+        output_folder = os.path.join(cwd, 'out')
+
     output_path = alias_path.replace(aliases_folder, output_folder)
     logging.debug(f'Writing compiled alias to {output_path}')
     os.makedirs(os.path.dirname(output_path), exist_ok = True)
@@ -96,46 +101,67 @@ def _write_compiled_alias(alias_path, compiled_output):
     f.write(compiled_output)
     f.close()
 
-def _do_compile_alias(alias_path, function_files):
-    new_content = ''
+def _do_strip_compiled_code(alias_path):
+    stripped_content = ''
     current_index = 0
     with open(alias_path) as f:
         alias_content = f.read()
-        f_re = '\n(([ \t]*)*)([a-zA-Z_][a-zA-Z_\d]*)?([ \t]*=[ \t]*)?#![ \t]*devrae_f[ \t]*([a-zA-Z_][a-zA-Z_\d]*)[ \t]*(\(.*)!#'
+        header_re = '##### devrae function insert'
+        footer_re = '##### devrae function end'
 
-        matches = re.finditer(f_re, alias_content)
+        matches = re.finditer(header_re, alias_content)
         for match in matches:
-            start_index = match.start()
-            end_index = match.end()
-            indent = match.group(1) if match.group(1) else ''
-            return_var = match.group(3)
-            function_name = match.group(5)
-            params_str = match.group(6).strip()
-            params_str = params_str[1:len(params_str) - 1].strip()
+            function_start_index = alias_content.rindex('\n', current_index, match.start())
+            stripped_content += alias_content[current_index:function_start_index]
+            function_end_index = alias_content.index(footer_re, current_index)
+            next_line_after_function_end = alias_content.index('\n', function_end_index)
+            current_index = next_line_after_function_end
+        stripped_content += alias_content[current_index:len(alias_content)]
 
-            logging.debug(f'>> injecting function {function_name} in alias {alias_path}')
+    return stripped_content
 
-            function_content = _read_function_content(function_name)
+def _do_compile_alias(alias_path, function_files):
+    new_content = ''
+    current_index = 0
+    alias_content = _do_strip_compiled_code(alias_path)
 
-            new_content += alias_content[current_index:start_index]
-            new_content += "\n\n" + indent + "##### devrae function insert #####\n"
-            params = params_str.split('#P')[1:]
-            for p_index in range(len(params)):
-                param = params[p_index].strip()
-                if len(param) != 0:
-                    new_content += f'{indent}__p{p_index}__ = {param}' + "\n"
+    # Regex for Devrae function call. Format:
+    # #! devrae_f <function name> (#P <parameter 1> #P <parameter 2, etc>) !#
+    f_re = '\n(([ \t]*)*)([a-zA-Z_][a-zA-Z_\d]*)?([ \t]*=[ \t]*)?#![ \t]*devrae_f[ \t]*([a-zA-Z_][a-zA-Z_\d]*)[ \t]*(\(.*)!#'
 
-            for line in function_content:
-                new_content += indent + line
+    matches = re.finditer(f_re, alias_content)
+    for match in matches:
+        start_index = match.start()
+        end_index = match.end()
+        indent = match.group(1) if match.group(1) else ''
+        return_var = match.group(3)
+        function_name = match.group(5)
+        params_str = match.group(6).strip()
+        params_str = params_str[1:len(params_str) - 1].strip()
 
-            if return_var != None and len(return_var.strip()) > 0:
-                new_content += f'{indent}{return_var} = __result__'
+        logging.debug(f'>> injecting function {function_name} in alias {alias_path}')
 
-            new_content += "\n" + indent + "##### devrae function end #####\n\n"
+        function_content = _read_function_content(function_name)
 
-            current_index = end_index
+        new_content += alias_content[current_index:end_index]
+        new_content += "\n" + indent + f'##### devrae function insert [{function_name}] #####' + "\n"
 
-        new_content += alias_content[current_index:len(alias_content) - 1]
+        params = params_str.split('#P')[1:]
+        for p_index in range(len(params)):
+            param = params[p_index].strip()
+            if len(param) != 0:
+                new_content += f'{indent}__p{p_index}__ = {param}' + "\n"
+
+        for line in function_content:
+            new_content += indent + line
+
+        if return_var != None and len(return_var.strip()) > 0:
+            new_content += f'{indent}{return_var} = __result__'
+
+        new_content += "\n" + indent + f'##### devrae function end [{function_name}] #####'
+        current_index = end_index
+
+    new_content += alias_content[current_index:len(alias_content)]
 
     return new_content
 
