@@ -18,7 +18,7 @@ commands = [
 ]
 
 if len(sys.argv) < 2 or not sys.argv[1] in commands:
-    raise Exception('Usage: devrae <init|compile|deploy|get-ids>')
+    raise Exception('Usage: devrae <init|compile [-ow]|deploy|get-ids>')
 
 
 
